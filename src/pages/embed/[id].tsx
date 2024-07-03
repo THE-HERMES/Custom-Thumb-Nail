@@ -1,87 +1,74 @@
-import { GetServerSideProps } from 'next';
+import { GetServerSideProps, InferGetServerSidePropsType } from 'next';
 import React, { useState, useEffect } from 'react';
 import { kv } from '@vercel/kv';
 import styles from '../../styles/Embed.module.css';
 
-interface EmbedProps {
-  youtubeId: string;
-  customThumbnailUrl: string;
-  title: string;
+interface EmbedData {
+    youtubeId: string;
+    customThumbnailUrl: string;
+    title: string;
 }
 
-const Embed: React.FC<EmbedProps> = ({ youtubeId, customThumbnailUrl, title }) => {
-  const [showVideo, setShowVideo] = useState(false);
+const Embed: React.FC<InferGetServerSidePropsType<typeof getServerSideProps>> = ({ youtubeId, customThumbnailUrl, title }) => {
+    const [showVideo, setShowVideo] = useState(false);
 
-  useEffect(() => {
-    if (showVideo) {
-      const timer = setTimeout(() => {
-        const thumbnail = document.querySelector(`.${styles.thumbnail}`);
-        if (thumbnail) thumbnail.classList.add(styles.hidden);
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [showVideo]);
+    useEffect(() => {
+        if (showVideo) {
+            const timer = setTimeout(() => {
+                const thumbnail = document.querySelector(`.${styles.thumbnail}`);
+                thumbnail?.classList.add(styles.hidden);
+            }, 500); 
 
-  const handleThumbnailClick = () => {
-    setShowVideo(true);
-  };
+            return () => clearTimeout(timer);
+        }
+    }, [showVideo]);
 
-  return (
-    <div className={styles.container}>
-      <div className={styles.videoWrapper}>
-        {!showVideo && (
-          <div className={styles.thumbnail} onClick={handleThumbnailClick}>
-            <img src={customThumbnailUrl} alt={title} />
-            <div className={styles.playButton}></div>
-          </div>
-        )}
-        {showVideo && (
-          <iframe
-            src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1`}
-            frameBorder="0"
-            allow="autoplay; encrypted-media"
-            allowFullScreen
-            title={title}
-          />
-        )}
-      </div>
-    </div>
-  );
+    const handleThumbnailClick = () => {
+        setShowVideo(true);
+    };
+
+    return (
+        <div className={styles.container}>
+            <div className={styles.videoWrapper}>
+                {!showVideo && (
+                    <div className={styles.thumbnail} onClick={handleThumbnailClick} role="button" tabIndex={0}> 
+                        <img src={customThumbnailUrl} alt={title} />
+                        <div className={styles.playButton} />
+                    </div>
+                )}
+                {showVideo && (
+                    <iframe
+                        src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=1`} 
+                        allow="autoplay; encrypted-media; picture-in-picture" 
+                        allowFullScreen
+                        title={title}
+                    />
+                )}
+            </div>
+        </div>
+    );
 };
 
-export const getServerSideProps: GetServerSideProps = async (context) => {
-  const { id } = context.params as { id: string };
+export const getServerSideProps: GetServerSideProps<{ youtubeId: string, customThumbnailUrl: string, title: string }> = async (context) => {
+    const { id } = context.params as { id: string };
 
-  if (!id || typeof id !== 'string') {
-    return {
-      notFound: true,
-    };
-  }
+    if (!id || typeof id !== 'string') {
+        return { notFound: true };
+    }
 
-  const data = await kv.get(`iframe:${id}`);
+    try {
+        const data = await kv.get<EmbedData>(`iframe:${id}`); 
+        if (!data) {
+            return { notFound: true };
+        }
 
-  if (!data) {
-    return {
-      notFound: true,
-    };
-  }
-
-  try {
-    const { youtubeId, customThumbnailUrl, title } = JSON.parse(data as string);
-
-    return {
-      props: {
-        youtubeId,
-        customThumbnailUrl,
-        title,
-      },
-    };
-  } catch (error) {
-    console.error('Error parsing data:', error);
-    return {
-      notFound: true,
-    };
-  }
+        return {
+            props: data, 
+        };
+    } catch (error) {
+        console.error('Error fetching data:', error);
+        return { notFound: true };
+    }
 };
 
 export default Embed;
