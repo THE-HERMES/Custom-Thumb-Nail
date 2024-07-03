@@ -1,20 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, FormEvent } from 'react';
 import Head from 'next/head';
 import styles from '../styles/Home.module.css';
 
 const Home: React.FC = () => {
-  const [youtubeUrl, setYoutubeUrl] = useState('');
-  const [thumbnailUrl, setThumbnailUrl] = useState('');
-  const [title, setTitle] = useState('');
-  const [iframeUrl, setIframeUrl] = useState('');
-  const [iframeCode, setIframeCode] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [youtubeUrl, setYoutubeUrl] = useState<string>('');
+  const [thumbnailUrl, setThumbnailUrl] = useState<string>('');
+  const [title, setTitle] = useState<string>('');
+  const [iframeUrl, setIframeUrl] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(false);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/create-iframe`, {
+      const response = await fetch('/api/create-iframe', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -23,15 +22,15 @@ const Home: React.FC = () => {
       });
       
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
       
       const data = await response.json();
       setIframeUrl(data.iframeUrl);
     } catch (error) {
       console.error('Error creating iframe:', error);
-      alert(`Error: ${error.message}`);
+      // Kullanıcıya hata mesajını göster
+      alert('An error occurred while creating the iframe. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -76,7 +75,8 @@ const Home: React.FC = () => {
         </form>
 
         {iframeUrl && (
-          <div className={styles.videoContainer}>
+          <div className={styles.iframeContainer}>
+            <h2>Generated Iframe:</h2>
             <iframe 
               src={iframeUrl} 
               style={{position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0}}
@@ -88,13 +88,6 @@ const Home: React.FC = () => {
               scrolling="no"
               title={title}
             />
-          </div>
-        )}
-
-        {iframeCode && (
-          <div className={styles.embedCode}>
-            <h3>Embed Code:</h3>
-            <textarea readOnly value={iframeCode} />
           </div>
         )}
       </main>
