@@ -1,0 +1,33 @@
+{
+  "name": "my-nextjs-bun-project",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "bun --bun next dev",
+    "build": "bun --bun next build",
+    "start": "bun --bun next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@types/axios": "^0.14.0",
+    "@types/sharp": "^0.32.0",
+    "autoprefixer": "^10.4.19",
+    "axios": "^1.7.2",
+    "next": "latest",
+    "node-fetch": "^3.3.2",
+    "postcss": "^8.4.39",
+    "react": "latest",
+    "react-dom": "latest",
+    "sharp": "^0.33.4",
+    "tailwindcss": "^3.4.4",
+    "uuid": "^10.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "@types/uuid": "^10.0.0",
+    "bun-types": "latest",
+    "typescript": "latest"
+  }
+}
