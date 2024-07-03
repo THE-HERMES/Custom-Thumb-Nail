@@ -10,26 +10,31 @@ const Home: React.FC = () => {
   const [iframeCode, setIframeCode] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      const response = await fetch('/api/create-iframe', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/create-iframe`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ youtubeUrl, thumbnailUrl, title }),
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+      }
+      
       const data = await response.json();
       setIframeUrl(data.iframeUrl);
-      const fullIframeUrl = `${window.location.origin}${data.iframeUrl}`;
-      const generatedIframeCode = `<iframe src="${fullIframeUrl}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" class="webembed-iframe" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" loading="lazy" scrolling="no" title="${title}"></iframe>`;
-      setIframeCode(generatedIframeCode);
     } catch (error) {
       console.error('Error creating iframe:', error);
+      alert(`Error: ${error.message}`);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
