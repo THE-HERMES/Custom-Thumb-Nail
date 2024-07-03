@@ -50,7 +50,14 @@ const Embed: React.FC<EmbedProps> = ({ youtubeId, customThumbnailUrl, title }) =
 };
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
-  const { id } = context.params;
+  const { id } = context.params as { id: string };
+
+  if (!id || typeof id !== 'string') {
+    return {
+      notFound: true,
+    };
+  }
+
   const data = await kv.get(`iframe:${id}`);
 
   if (!data) {
@@ -59,15 +66,22 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     };
   }
 
-  const { youtubeId, customThumbnailUrl, title } = JSON.parse(data as string);
+  try {
+    const { youtubeId, customThumbnailUrl, title } = JSON.parse(data as string);
 
-  return {
-    props: {
-      youtubeId,
-      customThumbnailUrl,
-      title,
-    },
-  };
+    return {
+      props: {
+        youtubeId,
+        customThumbnailUrl,
+        title,
+      },
+    };
+  } catch (error) {
+    console.error('Error parsing data:', error);
+    return {
+      notFound: true,
+    };
+  }
 };
 
 export default Embed;
