@@ -31,7 +31,6 @@ export default async function handler(
     'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
   );
 
-  // Handle preflight request
   if (req.method === 'OPTIONS') {
     res.status(200).end();
     return;
@@ -72,8 +71,8 @@ export default async function handler(
       const upload = new Upload({
         client: s3Client,
         params: {
-          Bucket: process.env.AWS_S3_BUCKET!,
-          Key: `custom-thumbnails/${avifFileName}`,
+          Bucket: 'temizmama',
+          Key: `thumbnails/${avifFileName}`,
           Body: buffer,
           ContentType: 'image/avif',
         },
@@ -84,7 +83,7 @@ export default async function handler(
       const data = {
         id,
         youtubeId,
-        customThumbnailUrl: `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/custom-thumbnails/${avifFileName}`,
+        customThumbnailUrl: `https://temizmama.s3.${process.env.AWS_REGION}.amazonaws.com/thumbnails/${avifFileName}`,
         title,
       };
       
