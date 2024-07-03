@@ -3,38 +3,41 @@ import Head from 'next/head';
 import styles from '../styles/Home.module.css';
 
 const Home: React.FC = () => {
-  const [youtubeUrl, setYoutubeUrl] = useState<string>('');
-  const [thumbnailUrl, setThumbnailUrl] = useState<string>('');
-  const [title, setTitle] = useState<string>('');
-  const [iframeUrl, setIframeUrl] = useState<string>('');
-  const [loading, setLoading] = useState<boolean>(false);
+    const [youtubeUrl, setYoutubeUrl] = useState('');
+    const [thumbnailUrl, setThumbnailUrl] = useState('');
+    const [title, setTitle] = useState('');
+    const [iframeUrl, setIframeUrl] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null); 
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const response = await fetch('/api/create-iframe', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ youtubeUrl, thumbnailUrl, title }),
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      setIframeUrl(data.iframeUrl);
-    } catch (error) {
-      console.error('Error creating iframe:', error);
-      // Kullanıcıya hata mesajını göster
-      alert('An error occurred while creating the iframe. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
+    const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        setLoading(true);
+        setError(null); // Clear previous errors
+
+        try {
+            const response = await fetch('/api/create-iframe', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ youtubeUrl, thumbnailUrl, title }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `HTTP error! status: ${response.status}`); 
+            }
+
+            const data = await response.json();
+            setIframeUrl(data.iframeUrl);
+        } catch (error) {
+            console.error('Error creating iframe:', error);
+            setError((error as Error).message || 'An unknown error occurred.'); 
+        } finally {
+            setLoading(false);
+        }
+    };
 
   return (
     <div className={styles.container}>
@@ -45,8 +48,9 @@ const Home: React.FC = () => {
       </Head>
 
       <main className={styles.main}>
-        <h1 className={styles.title}>YouTube Custom Thumbnail</h1>
-        
+      <h1 className={styles.title}>YouTube Custom Thumbnail</h1>
+        {error && <div className={styles.error}>{error}</div>} 
+
         <form onSubmit={handleSubmit} className={styles.form}>
           <input
             type="text"
